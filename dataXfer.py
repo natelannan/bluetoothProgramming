@@ -1,5 +1,7 @@
 import sys
+import re
 import bluetooth
+import select
 
 LMm_addr = "38:C0:96:41:0E:A2"
 uuid = "00001101-0000-1000-8000-00805f9b34fb"
@@ -17,6 +19,7 @@ print "Connecting to \"%s\" on %s on port %s" % (name, host, port)
 
 #sock=bluetooth.BluetoothSocket(bluetooth.SCO)
 sock=bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+#sock.setblocking(0)
 #port=bluetooth.get_available_port(bluetooth.RFCOMM)
 sock.connect((host,port))
 #sock.connect((host))
@@ -28,17 +31,48 @@ sock.connect((host,port))
 enq="\002ETC:VER ?;\003\016"
 dump="\002CMN:ALL ?;\003\034"
 getData="\002ETC:FWD ?;\003\032"
+ack="\006"
 
-
-sock.send(getData)
-i=0
-data = []
-while "\003" not in data:
-    data.append(sock.recv(1))
-    print "received [%r]" % data[i]
-    i=i+1
-
-chksum=sock.recv(1)
-print "checksum [%r]" % chksum
+while 1:
+    sock.send(getData)
     
+    field=0
+    data = ''
+    meas = ''
+    intensity = ''
+    error = 1
+    
+    while '\003' not in data:
+        #ready=select.select([sock],[],[],2)
+        #if ready[0]:
+        character=sock.recv(1)
+        #print character
+        data=data+character
+        if data == '\006\002ETC:FWD ':
+            #print 'foo'
+            field=1
+            #print "received [%r]" % data[i]
+        if character == ";":
+            field=field+1
+        elif field==5:
+            #print 'bar'
+            meas=meas+character
+        elif field==1:
+            #print 'baz'
+            intensity=intensity+character
+        elif field==4:
+            error =int(character)
+        #else:
+            #print "Resending"
+            #sock.send(getData)
+
+    chksum=sock.recv(1)
+        #print "checksum [%r]" % chksum
+
+    if error == 1:
+        print "Intensity = %s \t Methane (ppm-m) = %s" % (intensity,meas)
+    else:
+        print "Error = %d" % int(error)
+
+    sock.send(ack)    
 sock.close()
