@@ -2,6 +2,7 @@ import sys
 import re
 import bluetooth
 import select
+import time
 
 LMm_addr = "38:C0:96:41:0E:A2"
 uuid = "00001101-0000-1000-8000-00805f9b34fb"
@@ -34,6 +35,7 @@ getData="\002ETC:FWD ?;\003\032"
 ack="\006"
 
 while 1:
+    time.sleep(.5)
     sock.send(getData)
     
     field=0
@@ -70,7 +72,7 @@ while 1:
         #print "checksum [%r]" % chksum
 
     if error == 1:
-        print "Intensity = %s \t Methane (ppm-m) = %s" % (intensity,meas)
+        print "Intensity = %s \t Methane (ppm-m) = %s" % (float(intensity),int(meas))
     else:
         print "Error = %d" % int(error)
 
