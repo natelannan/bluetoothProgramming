@@ -3,7 +3,7 @@ import re
 import bluetooth
 import select
 import time
-import socket
+#from socket import *
 
 LMm_addr = "38:C0:96:41:0E:A2"
 uuid = "00001101-0000-1000-8000-00805f9b34fb"
@@ -69,9 +69,13 @@ while 1:
                 intensity=intensity+character
             elif field==4:
                 error =int(character)
-        except bluetooth.btcommon.BluetoothError:  #bluetooth.btcommon.BluetoothError
-            print "Resending"
-            sock.send(getData)
+        except bluetooth.btcommon.BluetoothError as error:
+            if str(error)=="timed out":
+                print error," Resending"
+                sock.send(getData)
+            else:
+                sys.exit(error)
+                
         #else:
             #print "Resending"
             #sock.send(getData)
