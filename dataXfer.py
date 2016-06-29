@@ -71,7 +71,7 @@ while 1:
                 error =int(character)
         except bluetooth.btcommon.BluetoothError as error:
             if str(error)=="timed out":
-                print error," Resending"
+                #print error," Resending"
                 sock.send(getData)
             else:
                 sys.exit(error)
